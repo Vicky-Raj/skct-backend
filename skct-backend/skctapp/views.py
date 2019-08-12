@@ -31,113 +31,188 @@ def send_mail(to,subject,text):
     server.quit()
 
 class HomeView(APIView):
-    def get(self, request, dept):
-        dept = get_object_or_404(Department,name=dept)
+    def get(self,request,name):
+        dept =get_object_or_404(Department,name=name)
         return Response({
-            'name':dept.name.upper(),
-            'having':dept.having,
-            'bg_img':dept.bg_img.url,
-            'about':dept.about,
-            'vision':dept.vision,
-            'mission':dept.mission,
-            'faculty_count':dept.faculty.count(),
-            'student':dept.student,
-            'strength':dept.faculty.count() + dept.student,
-            'gallery':[gal.image.url for gal in dept.gallery.all()],
-            'aluminis':[
+        'name':dept.name,
+        'certificate':dept.certificate,
+        'image':dept.dep_image.url,
+        'video':dept.video,
+        'about':dept.about,
+        'vision':dept.vision,
+        'mission':dept.mission,
+        'hod':{
+            'name':dept.hod.name,
+            'email':dept.hod.email,
+            'image':dept.hod.image.url,
+            'phone_num':dept.hod.phone_num,
+            'thought':dept.hod.thought,
+        },
+        'events':[{
+            'pk':event.pk,
+            'name':event.name,
+            'img':event.image.url,
+            'date':event.date,
+            'description':event.description,
+            'contact':event.contact,
+            'email':event.email
+
+        }
+
+
+        for event in  dept.events.all()],
+
+
+        })
+
+
+class AcademicsView(APIView):
+    def get(self,request,name):
+        dept= get_object_or_404(Department,name=name)
+        return Response([{
+        'name':academics.name,
+        'details':academics.details
+        }for academics in dept.academics.all()
+        ])
+
+class BestPraticesView(APIView):
+    def get(self,request,name):
+        dept =get_object_or_404(Department,name=name)
+        return Response([
             {
-                'img':alumini.img.url,
-                'name':alumini.name,
-                'thought':alumini.thought
-            }for alumini in dept.aluminis.all()
-            ],
-            'labs':[
+                'name':bp.name,
+                'details':bp.details
+            }
+        for bp in dept.bp.all()])
+    
+
+class FacultyView(APIView):
+    def get(self,request,name):
+        dept=get_object_or_404(Department,name=name)
+        return Response(
+
+        [
+            {   
+                'name':faculty.name,
+                'image':faculty.img.url,
+                'pos':faculty.pos,
+                 'email': faculty.email,
+                 'file':faculty.pdf_file.url,
+
+            }
+        for faculty in dept.facultys.all()
+        ]
+    )
+
+
+class LabView(APIView):
+    def get(self,request,name):
+        dept= get_object_or_404(Department,name=name)
+        return Response(
+            [
+            
+            {    'name':lab.name,
+                'description':lab.description,
+                'image':lab.image.url
+
+            }
+
+            for lab in dept.labs.all()]
+            )
+        
+class ResearchView(APIView):
+    def get(self,request,name):
+        dept=get_object_or_404(Department,name=name)
+        return Response([
+            file.file_name.url
+        ]for file in dept.researches.all())
+
+class PlacementView(APIView):
+    def get(self,request,name):
+        dept= get_object_or_404(Department,name=name)
+        return Response(
+            [
                 {
-                    'name':lab.name,
-                    'img':lab.image.url,
-                    'description':lab.description,
+                    'year':placement.year,
+                    'companies':
+                        [
+                            {
+                                'name':company.name,
+                                'logo':company.logo.url,
+                                'students':
+                                    [
+                                        {
+                                            'name':student.name,
+                                            'image':student.photo.url
+
+                                        }
+                                for student in company.students.all()
+                                ]
+                            }
+
+                        for company in placement.companys.all()]
+                    
+
                 }
-                for lab in dept.labs.all()
-            ],
-            'class_strength':dept.class_strength,
-               'events':[
+            for placement in dept.placement.all()
+            
+        ])
+
+
+class EventsView(APIView):
+    def get(self,request,name):
+        dept =get_object_or_404(Department,name=name)
+        return Response({
+            [
                 {
-                    'pk':event.pk,
                     'name':event.name,
                     'image':event.image.url,
                     'date':event.date,
                     'description':event.description,
                     'contact':event.contact,
-                    'email':event.email
+                    'email':event.email,
+
                 }
-                for event in dept.events.all()
-            ],
-            'thought':dept.thought,
-            'thought_author':dept.thought_name,
-            'thought_photo':dept.thought_photo.url,
-            'hod_name':dept.hod_name,
-            'hod_num':dept.hod_num,
-            'hod_email':dept.hod_email
+             for event in dept.events.all()]
         })
 
-class FacultyView(APIView):
-    def get(self, request, dept):
-        dep = get_object_or_404(Department,name=dept)
+class ClubView(APIView):
+    def get(self,request,name):
+        dept=get_object_or_404(Department,name=name)
+
+        return Response([
+        {
+            'name':club.club_name,
+            'details':club.club_details,
+            'photo':club.club_photo.url
+
+        }for club in dept.club.all()
+        ])
+
+class GalleryView(APIView):
+    def get(self,request,name):
+        dept = get_object_or_404(Department,name=name)
+
         return Response({
-            'faculty':[
-                {
-                    'img':fac.img,
-                    'name':fac.name,
-                    'pos':fac.pos,
-                    'email':fac.email,
-                    'pdf':f'http://{request.get_host()}{fac.pdf_file.url}/ '
-                }
-                for fac in dep.faculty.all() 
-            ]
+            'photos':[img.image.url for img in dept.gallery.all()]
         })
 
-class EventDetailView(APIView):
-    def get(self,request,pk):
-        event=Events.objects.get(pk=pk)
+
+class HodView(APIView):
+    def get(self,request,name):
+        dept = get_object_or_404(Department,name=name)
+
         return Response({
-            'name':event.name,
-            'image':event.image.url,
-            'date':event.date,
-            'description':event.description,
-            'contact':event.contact,
-            'email':event.email
+            'name':dept.hod.name,
+            'email':dept.hod.email,
+            'image':dept.hod.image.url,
+            'phone_num':dept.hod.phone_num,
+            'thought':dept.hod.thought
         })
 
-class FeedBackView(APIView):
-    def post(self,request,dep):
-        message = "Thank you for your feedback...\nStay tuned"
-        thread = threading.Thread(target=send_mail,args=(request.POST.get('gmail'),"feedback",message))
-        thread.start()
-        return Response()
+class CoeView(APIView):
+    pass
+        
 
-class MainView(APIView):
-    def get(self,request):
-        announcements=Announcement.objects.all()
-        return Response({
-            [
-                {
-                    'img':a.img.image.url,
-                    'description':a.description
-                }
-            for a in announcements]
-        })
-
-class UpcomingEventsView(APIView):
-     def get(self,request):
-         event=UpcomingEvents.objects.all()
-         return Response({
-             [
-                 {
-                'img':event.img.image.url,
-                'date':event.date,
-                'name':event.name
-            
-                 }
-              for event in event]
-         })
-
+class ManagementView(APIView):
+    pass
